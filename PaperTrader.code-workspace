@@ -2,6 +2,12 @@
 	"folders": [
 		{
 			"path": "."
+		},
+		{
+			"path": "../stocks-2/mysite"
+		},
+		{
+			"path": "../stocks-2/trader"
 		}
 	],
 	"settings": {}
