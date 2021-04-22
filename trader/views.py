@@ -55,29 +55,33 @@ def index(request):
     data, graph, current_price,= None, None, None
     if request.method == 'POST':
         stock = request.POST.get('stock')
-        price = Decimal(request.POST.get('price'))
-        quantity = request.POST.get('quantity')
-        quantity, error = validate_quantity(quantity)
-        if not error:
-            total = price * quantity
-            if total < user.balance:
-                user.balance -= total
-                user.save()
-                stock_model, created = Stock.objects.get_or_create(
-                    user=user,
-                    name=stock,
-                    defaults={'quantity': quantity}
-                )
-                if not created:
-                    stock_model.quantity += quantity
-                    stock_model.save()
-                Transaction.objects.create(stock=stock_model, price=-total, quantity=quantity)
-            else:
-                error = 'Not enough user balance to buy {quantity} {stock} at {price:.2f}'.format(
-                    quantity=quantity,
-                    stock=stock,
-                    price=price,
-                )
+        if not stock:
+            error = 'You must select stock'
+        else:
+            stock = stock.upper()
+            price = Decimal(request.POST.get('price'))
+            quantity = request.POST.get('quantity')
+            quantity, error = validate_quantity(quantity)
+            if not error:
+                total = price * quantity
+                if total < user.balance:
+                    user.balance -= total
+                    user.save()
+                    stock_model, created = Stock.objects.get_or_create(
+                        user=user,
+                        name=stock,
+                        defaults={'quantity': quantity}
+                    )
+                    if not created:
+                        stock_model.quantity += quantity
+                        stock_model.save()
+                    Transaction.objects.create(stock=stock_model, price=-total, quantity=quantity)
+                else:
+                    error = 'Not enough user balance to buy {quantity} {stock} at {price:.2f}'.format(
+                        quantity=quantity,
+                        stock=stock,
+                        price=price,
+                    )
     found = False
     if stock:
         try:
@@ -107,21 +111,25 @@ def sell(request):
         user = request.user
         stocks = Stock.objects.filter(user=user)
         stock = request.POST.get('stock')
-        stock_model = stocks.get(name=stock)
-        quantity = request.POST.get('quantity')
-        quantity, error = validate_quantity(quantity)
-        if not error:
-            df = get_stock_data(stock)
-            current_price = Decimal(df.iloc[-1]['Close'])
-            if quantity <= stock_model.quantity:
-                total = current_price * quantity
-                Transaction.objects.create(stock=stock_model, price=total, quantity=quantity)
-                stock_model.quantity -= quantity
-                stock_model.save()
-                user.balance += total
-                user.save()
-            else:
-                error = 'Not enough {stock} to sell'.format(stock=stock)
+        if not stock:
+            error = 'You must select stock'
+        else:
+            stock = stock.upper()
+            stock_model = stocks.get(name=stock)
+            quantity = request.POST.get('quantity')
+            quantity, error = validate_quantity(quantity)
+            if not error:
+                df = get_stock_data(stock)
+                current_price = Decimal(df.iloc[-1]['Close'])
+                if quantity <= stock_model.quantity:
+                    total = current_price * quantity
+                    Transaction.objects.create(stock=stock_model, price=total, quantity=quantity)
+                    stock_model.quantity -= quantity
+                    stock_model.save()
+                    user.balance += total
+                    user.save()
+                else:
+                    error = 'Not enough {stock} to sell'.format(stock=stock)
     redirect_url = '/'
     if error:
         redirect_url += '?error={error}'.format(error=error)
