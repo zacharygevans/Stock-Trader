@@ -1,0 +1,65 @@
+<form>
+{% if error %}
+<div class="row">
+  <div class="col-md-12">
+    <div class="alert alert-danger" role="alert">
+      {{ error }}
+    </div>
+  </div>
+</div>
+{% endif %}
+<div class="row">
+  <div class="col-md-12">
+    <div class="form-group">
+      <label for="stock">Search Stock</label>
+      <input
+        type="text" id="stock" class="form-control" name="stock"
+        {% if stock %} value="{{ stock }}" {% else %} placeholder="Type AAPL for example" {% endif %}
+      >
+    </div>
+  </div>
+</div>
+<div class="row">
+  <div class="col-md-12">
+    <button type="submit" class="btn btn-primary">Search</button>
+  </div>
+</div>
+</form>
+{% if stock and found %}
+<div class="row">
+  <div class="col-md-12">
+    Last 60 days
+  </div>
+</div>
+<div class="row">
+  <div class="col-md-12">
+    <img src="data:image/jpeg;base64,{{ graph }}">
+  </div>
+</div>
+<br/>
+<hr/>
+<form method="POST">
+{% csrf_token %}
+<div class="row">
+  <div class="col-md-12">
+    Current price: ${{ current_price|floatformat:2 }}
+  </div>
+</div>
+<div class="row">
+  <div class="col-md-12">
+    <div class="form-group">
+      <label for="quantity">Quantity</label>
+      <input type="number" id="quantity" class="form-control" name="quantity">
+    </div>
+  </div>
+</div>
+<div class="row">
+  <div class="col-md-12">
+    <button type="submit" class="btn btn-success">Buy</button>
+  </div>
+</div>
+<input type="hidden" value="{{ stock }}" name="stock">
+<input type="hidden" value="{{ current_price }}" name="price">
+</form>
+{% endif %}
+
